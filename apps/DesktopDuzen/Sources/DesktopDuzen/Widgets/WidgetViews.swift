@@ -9,6 +9,7 @@ public struct WidgetContainerView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject private var wallpaper = WallpaperSampler.shared
     let widgetID: UUID
+    @State private var isHovered = false
 
     private var dragArea: some View {
         WindowDragArea(onDragEnded: { frame in
@@ -20,7 +21,9 @@ public struct WidgetContainerView: View {
         if let widget = appState.widgets.first(where: { $0.id == widgetID }) {
             let palette = ZonePalette.forWidget(widget)
             VStack(spacing: 0) {
-                header(widget, palette: palette)
+                if widget.showHeader {
+                    header(widget, palette: palette)
+                }
 
                 Group {
                     switch widget.type {
@@ -33,6 +36,17 @@ public struct WidgetContainerView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 // Display-only widgets can be dragged from anywhere; the note keeps its text editor.
                 .allowsHitTesting(widget.type == .quickNote)
+            }
+            .overlay(alignment: .topTrailing) {
+                if !widget.showHeader {
+                    floatingControls(widget, palette: palette)
+                        .opacity(isHovered ? 1.0 : 0.0)
+                        .animation(.easeInOut(duration: 0.15), value: isHovered)
+                }
+            }
+            .onHover { isHovered = $0 }
+            .contextMenu {
+                styleMenu(widget)
             }
             .background(
                 ZStack {
@@ -99,6 +113,37 @@ public struct WidgetContainerView: View {
                 dragArea
             }
         )
+    }
+
+    private func floatingControls(_ widget: DesktopWidget, palette: ZonePalette) -> some View {
+        HStack(spacing: 6) {
+            Menu {
+                styleMenu(widget)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(palette.primary)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .frame(width: 18, height: 18)
+            .background(Circle().fill(palette.controlFill))
+            .help("Theme, transparency and more")
+
+            Button {
+                appState.widgets.removeAll { $0.id == widgetID }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(palette.primary)
+                    .frame(width: 18, height: 18)
+                    .background(Circle().fill(palette.controlFill))
+            }
+            .buttonStyle(.plain)
+            .help("Remove widget")
+        }
+        .padding(8)
     }
 
     @ViewBuilder
@@ -181,6 +226,9 @@ public struct WidgetContainerView: View {
         Button(widget.showBorder ? "Hide Border" : "Show Border") {
             update { $0.showBorder.toggle() }
         }
+        Button(widget.showHeader ? "Hide Title Bar" : "Show Title Bar") {
+            update { $0.showHeader.toggle() }
+        }
         Divider()
         Button("Reset Style") {
             update {
@@ -188,6 +236,7 @@ public struct WidgetContainerView: View {
                 $0.backgroundOpacity = nil
                 $0.textColorHex = nil
                 $0.showBorder = true
+                $0.showHeader = ($0.type != .clock)
             }
         }
         Button("Remove Widget") {

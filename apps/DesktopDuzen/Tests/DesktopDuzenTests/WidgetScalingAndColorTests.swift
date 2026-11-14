@@ -83,6 +83,31 @@ final class WidgetScalingAndColorTests: XCTestCase {
         }
     }
 
+    func testClockHeaderDefaultsToHiddenAndRoundTrips() throws {
+        // Clock widgets default to hidden header (no title, no dots)
+        let clock = DesktopWidget(type: .clock)
+        XCTAssertFalse(clock.showHeader, "Clock header must be hidden by default")
+
+        // Non-clock widgets default to visible header
+        let calendar = DesktopWidget(type: .calendar)
+        XCTAssertTrue(calendar.showHeader, "Calendar header must be visible by default")
+
+        let note = DesktopWidget(type: .quickNote)
+        XCTAssertTrue(note.showHeader, "QuickNote header must be visible by default")
+
+        // Older JSON missing showHeader decodes clock with showHeader == false
+        let legacyClockJSON = #"{"id":"34503662-1920-411F-9F39-EC6862779FF5","type":"clock","title":"Time","frame":[[60,970],[220,110]]}"#
+        let decodedClock = try JSONDecoder().decode(DesktopWidget.self, from: Data(legacyClockJSON.utf8))
+        XCTAssertFalse(decodedClock.showHeader, "Legacy clock JSON without showHeader must decode with showHeader = false")
+
+        // Explicitly set showHeader round-trips correctly
+        var customClock = clock
+        customClock.showHeader = true
+        let encoded = try JSONEncoder().encode(customClock)
+        let roundTripped = try JSONDecoder().decode(DesktopWidget.self, from: encoded)
+        XCTAssertTrue(roundTripped.showHeader)
+    }
+
     // MARK: - Calendar Font Scaling
 
     func testCalendarFontSizesScaleProportionally() {

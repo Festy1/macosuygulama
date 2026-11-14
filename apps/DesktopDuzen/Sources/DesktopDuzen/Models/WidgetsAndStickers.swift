@@ -103,6 +103,8 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
     public var showBorder: Bool
     /// Optional user-selected text/font colour. Kept fully visible at 100% opacity regardless of background transparency.
     public var textColorHex: String?
+    /// Whether to show the header bar (icon, title, menu dots, close button). Defaults to false for clock widgets.
+    public var showHeader: Bool
 
     public init(
         id: UUID = UUID(),
@@ -115,7 +117,8 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         themeID: String = "dark_frost",
         backgroundOpacity: Double? = nil,
         showBorder: Bool = true,
-        textColorHex: String? = nil
+        textColorHex: String? = nil,
+        showHeader: Bool? = nil
     ) {
         self.id = id
         self.type = type
@@ -128,10 +131,11 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         self.backgroundOpacity = backgroundOpacity
         self.showBorder = showBorder
         self.textColorHex = textColorHex
+        self.showHeader = showHeader ?? (type != .clock)
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, title, frame, noteContent, noteColorHex, isDigitalClock, themeID, backgroundOpacity, showBorder, textColorHex
+        case id, type, title, frame, noteContent, noteColorHex, isDigitalClock, themeID, backgroundOpacity, showBorder, textColorHex, showHeader
     }
 
     public init(from decoder: Decoder) throws {
@@ -154,5 +158,7 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         backgroundOpacity = opacity.map { min(max($0, 0), 1) }
         showBorder = c.value(.showBorder, default: true)
         textColorHex = c.optionalValue(.textColorHex)
+        let decodedShowHeader: Bool? = c.optionalValue(.showHeader)
+        showHeader = decodedShowHeader ?? (type != .clock)
     }
 }

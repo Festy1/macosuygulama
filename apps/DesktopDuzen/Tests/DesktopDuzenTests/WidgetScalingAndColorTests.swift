@@ -54,6 +54,35 @@ final class WidgetScalingAndColorTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(palette.titleContrast, 4.5)
     }
 
+    func testThemeDefaultFontColorPreservedAcrossAllTransparencyLevels() {
+        // Test that when font color is set to Theme Default (textColorHex == nil),
+        // widgets preserve their real theme font color and accent color across all transparency levels
+        // (including 0% Clear, 15%, 35%, 50%, 75%, 100% Solid, and Theme Default nil).
+        let testOpacities: [Double?] = [nil, 1.0, 0.75, 0.50, 0.35, 0.15, 0.0]
+
+        for theme in ThemePresets.allThemes {
+            for op in testOpacities {
+                let widget = DesktopWidget(type: .clock, themeID: theme.id, backgroundOpacity: op)
+                let p = ZonePalette.forWidget(widget)
+                XCTAssertEqual(
+                    p.titleRGB.hexString.uppercased(),
+                    theme.titleColorHex.uppercased(),
+                    "Theme [\(theme.name)] title font color must remain \(theme.titleColorHex) at opacity \(String(describing: op))"
+                )
+                XCTAssertEqual(
+                    p.accentRGB.hexString.uppercased(),
+                    theme.accentColorHex.uppercased(),
+                    "Theme [\(theme.name)] accent color must remain \(theme.accentColorHex) at opacity \(String(describing: op))"
+                )
+                XCTAssertEqual(
+                    p.secondaryOpacity,
+                    1.0,
+                    "Theme [\(theme.name)] secondary opacity must remain 100% at opacity \(String(describing: op))"
+                )
+            }
+        }
+    }
+
     // MARK: - Calendar Font Scaling
 
     func testCalendarFontSizesScaleProportionally() {

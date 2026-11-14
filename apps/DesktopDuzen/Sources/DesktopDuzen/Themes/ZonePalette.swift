@@ -208,6 +208,12 @@ public struct ZonePalette: Equatable {
             p.primaryRGB = textColor
             p.accentRGB = textColor
             p.secondaryOpacity = 1.0
+        } else {
+            // Theme Default: always preserve the theme's title and accent colors
+            // across all transparency levels.
+            p.titleRGB = RGBAColor(hex: theme.titleColorHex)
+            p.accentRGB = RGBAColor(hex: theme.accentColorHex)
+            p.secondaryOpacity = 1.0
         }
         p.showBorder = widget.showBorder
         return p
@@ -244,8 +250,8 @@ public struct ZonePalette: Equatable {
         p.glassHighlight = false
         p.isDark = true
         p.primaryRGB = .white
-        p.titleRGB = .white
-        p.accentRGB = .white
+        p.titleRGB = customHex == nil ? RGBAColor(hex: theme.titleColorHex) : .white
+        p.accentRGB = customHex == nil ? RGBAColor(hex: theme.accentColorHex) : .white
         p.secondaryOpacity = 0.92
         p.borderRGB = RGBAColor(r: 1, g: 1, b: 1, a: opacity <= 0.01 ? 0 : 0.35)
         // What the text actually sits on: the (faint) tint over the wallpaper.
@@ -257,8 +263,9 @@ public struct ZonePalette: Equatable {
                 p.clearOnLight = true
                 p.isDark = false
                 p.primaryRGB = .black
-                p.titleRGB = .black
-                p.accentRGB = .black
+                if customHex != nil || RGBAColor(hex: theme.titleColorHex).relativeLuminance > 0.5 {
+                    p.titleRGB = .black
+                }
                 p.secondaryOpacity = 0.85
                 p.borderRGB = RGBAColor(r: 0, g: 0, b: 0, a: opacity <= 0.01 ? 0 : 0.30)
             }

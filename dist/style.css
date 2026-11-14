@@ -101,3 +101,118 @@
   .os-tab-btn { flex: 1; justify-content: center; padding: 10px 14px; font-size: 13px; }
 }
 
+/* Best Mac Apps Banner */
+.mac-apps-banner {
+  margin: 50px auto 30px;
+  background: #17181c;
+  color: #fff;
+  border-radius: 20px;
+  padding: 44px 40px;
+  border: 1px solid #2a2c33;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+}
+.mac-apps-header h2 {
+  font-size: clamp(26px, 3.2vw, 38px);
+  color: #ffffff;
+  letter-spacing: -1.2px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.mac-apps-header p {
+  font-size: 16px;
+  color: #9da3af;
+  margin-bottom: 32px;
+  max-width: 720px;
+  line-height: 1.5;
+}
+.mac-apps-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.mac-card {
+  background: #212228;
+  border: 1px solid #2f3139;
+  border-radius: 16px;
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.mac-card:hover {
+  transform: translateY(-3px);
+  border-color: #434752;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+}
+.mac-card-icon {
+  margin-bottom: 16px;
+}
+.card-newsletter .mac-card-icon { color: #f97316; }
+.card-directory .mac-card-icon { color: #3b82f6; }
+.card-submit .mac-card-icon { color: #10b981; }
+
+.mac-card h3 {
+  font-size: 21px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  letter-spacing: -0.4px;
+}
+.mac-card-sub {
+  font-size: 13.5px;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  flex: 1;
+}
+.mac-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-orange {
+  background: #3e1b10;
+  color: #fb923c;
+  border: 1px solid #6c2e1b;
+}
+.btn-orange:hover {
+  background: #542416;
+  color: #fdba74;
+}
+.btn-blue {
+  background: #112845;
+  color: #60a5fa;
+  border: 1px solid #1e4577;
+}
+.btn-blue:hover {
+  background: #183860;
+  color: #93c5fd;
+}
+.btn-green {
+  background: #0f3325;
+  color: #34d399;
+  border: 1px solid #1a563f;
+}
+.btn-green:hover {
+  background: #174734;
+  color: #6ee7b7;
+}
+
+@media(max-width: 850px) {
+  .mac-apps-cards {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .mac-apps-banner {
+    padding: 30px 22px;
+    margin: 30px 16px;
+  }
+}
+
+

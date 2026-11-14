@@ -1,17 +1,60 @@
+# Best Mac Apps (2026) — Native macOS Apps
+
+> **Discover high-quality macOS apps built with Swift, SwiftUI, and AppKit — fast, lightweight, and made for your Mac.**
+
 <div align="center">
 
-# macOS Uygulama
+[Website](https://macosuygulama.vercel.app) · [Türkçe](https://macosuygulama.vercel.app/tr/) · [MacNative.io](https://macnative.io) · [Report an issue](https://github.com/themanoftalent/macosuygulama/issues) · [Contribute](CONTRIBUTING.md)
 
-Native, local-first, open-source apps for macOS.
-
-[Website](https://macosuygulama.vercel.app) · [Türkçe](https://macosuygulama.vercel.app/tr/) · [Report an issue](https://github.com/themanoftalent/macosuygulama/issues) · [Contribute](CONTRIBUTING.md)
-
-![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-000?logo=vercel)
-![Platform](https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple)
-![Apps](https://img.shields.io/badge/apps-13-blue)
-![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+[![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-Vercel-000?logo=vercel)](https://macosuygulama.vercel.app)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple)](https://macosuygulama.vercel.app)
+[![Built with](https://img.shields.io/badge/built%20with-Swift%20|%20SwiftUI%20|%20AppKit-FA7343?logo=swift&logoColor=white)](https://macosuygulama.vercel.app)
+[![Apps](https://img.shields.io/badge/apps-13-blue)](https://macosuygulama.vercel.app)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
 </div>
+
+<br>
+
+<table width="100%">
+<tr>
+<td width="33.3%" valign="top">
+
+### ✉️ Newsletter
+**Native apps, in your inbox.**  
+Hidden gems. Handpicked for Mac.
+
+<br>
+
+[**Subscribe →**](https://macnative.io/newsletter)
+
+</td>
+<td width="33.3%" valign="top">
+
+### 🖥️ MacNative.io
+**Find your next favorite app.**  
+Explore the curated Mac directory.
+
+<br>
+
+[**Explore the website →**](https://macnative.io)
+
+</td>
+<td width="33.3%" valign="top">
+
+### 🚀 Submit your app
+**Built something for Mac?**  
+Submit your native app to get featured.
+
+<br>
+
+[**Submit your app →**](https://github.com/themanoftalent/macosuygulama/issues/new?title=%5BApp+Submission%5D+)
+
+</td>
+</tr>
+</table>
+
+<br>
 
 macOS Uygulama is the home page and download hub for a family of macOS tools built and maintained by Mehmet Akif Çifçi ([@themanoftalent](https://github.com/themanoftalent)). Every app runs on your machine, needs no account, and ships its source code on GitHub.
 

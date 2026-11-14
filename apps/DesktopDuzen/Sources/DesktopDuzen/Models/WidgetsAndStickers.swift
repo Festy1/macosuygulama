@@ -101,6 +101,8 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
     /// nil = theme opacity; below 0.35 the widget is drawn in clear mode.
     public var backgroundOpacity: Double?
     public var showBorder: Bool
+    /// Optional user-selected text/font colour. Kept fully visible at 100% opacity regardless of background transparency.
+    public var textColorHex: String?
 
     public init(
         id: UUID = UUID(),
@@ -112,7 +114,8 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         isDigitalClock: Bool = true,
         themeID: String = "dark_frost",
         backgroundOpacity: Double? = nil,
-        showBorder: Bool = true
+        showBorder: Bool = true,
+        textColorHex: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -124,10 +127,11 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         self.themeID = themeID
         self.backgroundOpacity = backgroundOpacity
         self.showBorder = showBorder
+        self.textColorHex = textColorHex
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, title, frame, noteContent, noteColorHex, isDigitalClock, themeID, backgroundOpacity, showBorder
+        case id, type, title, frame, noteContent, noteColorHex, isDigitalClock, themeID, backgroundOpacity, showBorder, textColorHex
     }
 
     public init(from decoder: Decoder) throws {
@@ -149,5 +153,6 @@ public struct DesktopWidget: Identifiable, Codable, Equatable {
         let opacity: Double? = c.optionalValue(.backgroundOpacity)
         backgroundOpacity = opacity.map { min(max($0, 0), 1) }
         showBorder = c.value(.showBorder, default: true)
+        textColorHex = c.optionalValue(.textColorHex)
     }
 }

@@ -202,6 +202,13 @@ public struct ZonePalette: Equatable {
         } else {
             p = make(theme: theme, customOpacity: widget.backgroundOpacity)
         }
+        if let textHex = widget.textColorHex {
+            let textColor = RGBAColor(hex: textHex)
+            p.titleRGB = textColor
+            p.primaryRGB = textColor
+            p.accentRGB = textColor
+            p.secondaryOpacity = 1.0
+        }
         p.showBorder = widget.showBorder
         return p
     }

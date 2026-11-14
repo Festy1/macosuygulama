@@ -24,8 +24,8 @@ public struct WidgetContainerView: View {
 
                 Group {
                     switch widget.type {
-                    case .clock: ClockWidgetView()
-                    case .calendar: CalendarWidgetView()
+                    case .clock: ClockWidgetView(widget: widget)
+                    case .calendar: CalendarWidgetView(widget: widget)
                     case .quickNote: QuickNoteWidgetView(widgetID: widget.id, initialText: widget.noteContent, colorHex: widget.noteColorHex)
                     case .systemGlance: SystemMonitorWidgetView()
                     }
@@ -46,7 +46,7 @@ public struct WidgetContainerView: View {
                     .strokeBorder(palette.showBorder ? palette.border : Color.clear, lineWidth: CGFloat(palette.borderWidth))
                     .allowsHitTesting(false)
             )
-            .modifier(ClearModeHalo(active: palette.isClear, lightGlow: palette.clearOnLight))
+            .modifier(ClearModeHalo(active: palette.isClear && widget.textColorHex == nil, lightGlow: palette.clearOnLight))
             .environment(\.zonePalette, palette)
             .environment(\.colorScheme, palette.colorScheme)
         }
@@ -137,6 +137,47 @@ public struct WidgetContainerView: View {
                 }
             }
         }
+        Menu("Font Color") {
+            Button {
+                update { $0.textColorHex = nil }
+            } label: {
+                if widget.textColorHex == nil {
+                    Label("Theme Default", systemImage: "checkmark")
+                } else {
+                    Text("Theme Default")
+                }
+            }
+            Divider()
+            let presets: [(name: String, hex: String)] = [
+                ("Red", "#FF3B30"),
+                ("Orange", "#FF9500"),
+                ("Yellow", "#FFCC00"),
+                ("Green", "#34C759"),
+                ("Mint", "#00C7BE"),
+                ("Teal", "#30B0C7"),
+                ("Blue", "#007AFF"),
+                ("Indigo", "#5856D6"),
+                ("Purple", "#AF52DE"),
+                ("Pink", "#FF2D55"),
+                ("White", "#FFFFFF"),
+                ("Black", "#000000")
+            ]
+            ForEach(presets, id: \.hex) { preset in
+                Button {
+                    update { $0.textColorHex = preset.hex }
+                } label: {
+                    if widget.textColorHex?.uppercased() == preset.hex.uppercased() {
+                        Label(preset.name, systemImage: "checkmark")
+                    } else {
+                        Text(preset.name)
+                    }
+                }
+            }
+            Divider()
+            Button("Custom Color…") {
+                ColorPanelDelegate.shared.show(for: widget.id, in: appState)
+            }
+        }
         Button(widget.showBorder ? "Hide Border" : "Show Border") {
             update { $0.showBorder.toggle() }
         }
@@ -145,6 +186,7 @@ public struct WidgetContainerView: View {
             update {
                 $0.themeID = "dark_frost"
                 $0.backgroundOpacity = nil
+                $0.textColorHex = nil
                 $0.showBorder = true
             }
         }
@@ -161,12 +203,48 @@ public struct WidgetContainerView: View {
     }
 }
 
+// MARK: - Color Panel Delegate
+
+public final class ColorPanelDelegate: NSObject {
+    public static let shared = ColorPanelDelegate()
+    public var currentWidgetID: UUID?
+    public weak var appState: AppState?
+
+    public func show(for widgetID: UUID, in state: AppState) {
+        self.currentWidgetID = widgetID
+        self.appState = state
+        NSApp.activate(ignoringOtherApps: true)
+        let panel = NSColorPanel.shared
+        if let widget = state.widgets.first(where: { $0.id == widgetID }),
+           let hex = widget.textColorHex {
+            panel.color = NSColor(Color(hex: hex))
+        }
+        panel.setTarget(self)
+        panel.setAction(#selector(colorDidChange(_:)))
+        panel.orderFront(nil)
+    }
+
+    @objc public func colorDidChange(_ sender: NSColorPanel) {
+        guard let id = currentWidgetID, let state = appState else { return }
+        let rgb = sender.color.usingColorSpace(.sRGB) ?? sender.color
+        let hex = RGBAColor(r: Double(rgb.redComponent), g: Double(rgb.greenComponent), b: Double(rgb.blueComponent)).hexString
+        if let idx = state.widgets.firstIndex(where: { $0.id == id }) {
+            state.widgets[idx].textColorHex = hex
+        }
+    }
+}
+
 // MARK: - Clock
 
 public struct ClockWidgetView: View {
     @Environment(\.zonePalette) private var palette
+    public var widget: DesktopWidget?
     @State private var now = Date()
     private let timer = Timer.publish(every: 1, tolerance: 0.2, on: .main, in: .common).autoconnect()
+
+    public init(widget: DesktopWidget? = nil) {
+        self.widget = widget
+    }
 
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -181,18 +259,39 @@ public struct ClockWidgetView: View {
     }()
 
     public var body: some View {
-        VStack(spacing: 4) {
-            Text(Self.timeFormatter.string(from: now))
-                .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundColor(palette.title)
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-            Text(Self.dateFormatter.string(from: now))
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(palette.secondary)
-                .lineLimit(1)
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            // Proportional font sizes based on widget dimensions
+            let timeSize = max(20, min(h * 0.38, w * 0.24))
+            let dateSize = max(11, min(h * 0.16, w * 0.09))
+            let spacing = max(2, min(h * 0.05, 12))
+
+            let clockColor: Color = {
+                if let hex = widget?.textColorHex {
+                    return Color(hex: hex)
+                }
+                return palette.title
+            }()
+
+            VStack(spacing: spacing) {
+                Text(Self.timeFormatter.string(from: now))
+                    .font(.system(size: timeSize, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundColor(clockColor)
+                    .opacity(1.0)
+                    .minimumScaleFactor(0.4)
+                    .lineLimit(1)
+                Text(Self.dateFormatter.string(from: now))
+                    .font(.system(size: dateSize, weight: .medium))
+                    .foregroundColor(clockColor)
+                    .opacity(1.0)
+                    .minimumScaleFactor(0.4)
+                    .lineLimit(1)
+            }
+            .frame(width: w, height: h, alignment: .center)
         }
-        .padding(12)
+        .padding(8)
         .onReceive(timer) { now = $0 }
     }
 }
@@ -201,8 +300,13 @@ public struct ClockWidgetView: View {
 
 public struct CalendarWidgetView: View {
     @Environment(\.zonePalette) private var palette
+    public var widget: DesktopWidget?
     @State private var today = Date()
     private let timer = Timer.publish(every: 600, tolerance: 60, on: .main, in: .common).autoconnect()
+
+    public init(widget: DesktopWidget? = nil) {
+        self.widget = widget
+    }
 
     private var calendar: Calendar { Calendar.autoupdatingCurrent }
 
@@ -211,7 +315,12 @@ public struct CalendarWidgetView: View {
               let first = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) else { return [] }
         let weekday = calendar.component(.weekday, from: first)
         let leading = (weekday - calendar.firstWeekday + 7) % 7
-        return Array(repeating: nil, count: leading) + range.map { Optional($0) }
+        var days = Array(repeating: nil as Int?, count: leading) + range.map { Optional($0) }
+        let remainder = days.count % 7
+        if remainder != 0 {
+            days += Array(repeating: nil as Int?, count: 7 - remainder)
+        }
+        return days
     }
 
     private var weekdaySymbols: [String] {
@@ -221,33 +330,90 @@ public struct CalendarWidgetView: View {
     }
 
     public var body: some View {
-        let todayNumber = calendar.component(.day, from: today)
-        // Today's badge: primary-coloured disc with the background colour as text (always high contrast).
-        let badgeText = palette.isClear ? Color.black : palette.effectiveBackground.color
-        VStack(spacing: 6) {
-            Text(today.formatted(.dateTime.month(.wide).year()))
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(palette.title)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 2), count: 7), spacing: 3) {
-                ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
-                    Text(symbol)
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(palette.secondary)
-                }
-                ForEach(Array(dayCells.enumerated()), id: \.offset) { _, day in
-                    if let day = day {
-                        Text("\(day)")
-                            .font(.system(size: 10, weight: day == todayNumber ? .bold : .regular).monospacedDigit())
-                            .foregroundColor(day == todayNumber ? badgeText : palette.primary)
-                            .frame(width: 20, height: 18)
-                            .background(Circle().fill(day == todayNumber ? palette.primary : Color.clear))
-                    } else {
-                        Text(" ").font(.system(size: 10))
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            // Calculate responsive metrics
+            let hPadding = max(8, min(w * 0.04, 28))
+            let vPadding = max(6, min(h * 0.03, 24))
+            let usableW = max(50, w - 2 * hPadding)
+            let usableH = max(50, h - 2 * vPadding)
+
+            // Number of rows: 1 weekday row + week rows (typically 5 or 6)
+            let weekRowCount = CGFloat(dayCells.count / 7)
+            let totalRowCount = max(6, 1 + weekRowCount)
+
+            let titleH = max(16, min(usableH * 0.13, 50))
+            let titleSpacing = max(4, min(usableH * 0.03, 16))
+
+            let gridH = max(30, usableH - titleH - titleSpacing)
+            let cellW = usableW / 7.0
+            let rowH = gridH / totalRowCount
+            let cellSize = min(cellW, rowH)
+
+            let titleFontSize = max(11, min(titleH * 0.65, 34))
+            let weekdayFontSize = max(8, min(cellSize * 0.35, 22))
+            let dateFontSize = max(9, min(cellSize * 0.46, 30))
+            let todayBadgeSize = max(16, min(cellSize * 0.85, 60))
+
+            let todayNumber = calendar.component(.day, from: today)
+            let badgeText = palette.isClear ? Color.black : palette.effectiveBackground.color
+            let textColor = widget?.textColorHex.flatMap { Color(hex: $0) }
+
+            VStack(spacing: titleSpacing) {
+                // Month & Year Title
+                Text(today.formatted(.dateTime.month(.wide).year()))
+                    .font(.system(size: titleFontSize, weight: .bold))
+                    .foregroundColor(textColor ?? palette.title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(height: titleH)
+
+                // Grid: Weekday Header + Date Rows
+                VStack(spacing: max(1, min(gridH * 0.015, 8))) {
+                    // Weekday Header Row
+                    HStack(spacing: 0) {
+                        ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
+                            Text(symbol)
+                                .font(.system(size: weekdayFontSize, weight: .bold))
+                                .foregroundColor(textColor?.opacity(0.85) ?? palette.secondary)
+                                .frame(width: cellW, height: rowH)
+                        }
+                    }
+
+                    // Date Rows
+                    let weeks = stride(from: 0, to: dayCells.count, by: 7).map {
+                        Array(dayCells[$0..<min($0 + 7, dayCells.count)])
+                    }
+
+                    ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+                        HStack(spacing: 0) {
+                            ForEach(Array(week.enumerated()), id: \.offset) { _, day in
+                                ZStack {
+                                    if let day = day {
+                                        if day == todayNumber {
+                                            Circle()
+                                                .fill(palette.primary)
+                                                .frame(width: todayBadgeSize, height: todayBadgeSize)
+                                        }
+                                        Text("\(day)")
+                                            .font(.system(size: dateFontSize, weight: day == todayNumber ? .bold : .regular).monospacedDigit())
+                                            .foregroundColor(day == todayNumber ? badgeText : (textColor ?? palette.primary))
+                                    } else {
+                                        Text("")
+                                    }
+                                }
+                                .frame(width: cellW, height: rowH)
+                            }
+                        }
                     }
                 }
             }
+            .padding(.horizontal, hPadding)
+            .padding(.vertical, vPadding)
+            .frame(width: w, height: h, alignment: .center)
         }
-        .padding(10)
         .onReceive(timer) { today = $0 }
     }
 }
